@@ -62,17 +62,16 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
-
-
 a1 = [ones(m,1) X];
-z2 = a1*(Theta1)';
+z2 = a1*(Theta1)';		%5000x401 * 401x25 = 5000x25
 a2 = sigmoid(z2);
 a2 = [ones(m, 1) a2];
-z3 = a2*(Theta2)';
-a3 = sigmoid(z3);
+z3 = a2*(Theta2)';		%5000x26 * 26x10 = 5000x10
+a3 = sigmoid(z3);   	%5000x10
 
 % compute cost function without regularization
-%{ method1:
+% compute cost function with for loop method:
+%{ 
 for i=1:m
 	y_mat = zeros(1, num_labels);
 	y_mat(y(i)) = 1;
@@ -81,8 +80,8 @@ for i=1:m
 end
 %}
 
-% method2:
-y_matrix = eye(num_labels)(y,:);
+%compute cost function with vectorization method:
+y_matrix = eye(num_labels)(y,:);		% t = eye(num_labels);y_matrix = t(y,:);
 
 J = 1/m * sum(sum(-1 * y_matrix .* log(a3) - (1 - y_matrix) .* log(1 - a3)));
 
@@ -97,19 +96,20 @@ delta1_sum = zeros(hidden_layer_size, input_layer_size + 1);
 delta2_sum = zeros(num_labels, hidden_layer_size + 1);
 
 a1 = [ones(m,1) X];		%matrix 5000x401
-z2 = a1*(Theta1)';		%5000x25
+z2 = a1*(Theta1)';		%5000x25 = 5000x401 * 401x25
 a2 = sigmoid(z2);
 a2 = [ones(m, 1) a2];	%matrix 5000x26
-z3 = a2*(Theta2)';		%5000x10
+z3 = a2*(Theta2)';		%5000x10 = 5000x26 * 26x10
 a3 = sigmoid(z3);		%matrix 5000x10
 
 %Theta1	matrix 25x401
 %Theta2 matrix 10x26
 
-%{ compute gradient method1:
+%compute gradient with for loop method:
+%{ 
 for i = 1:m
 	y_mat= zeros(1, num_labels);
-	y_mat(y(i)) = 1;
+    y_mat(y(i)) = 1;                %matrix 5000x10
 	delta3 = a3(i,:) - y_mat;		% matrix 1x10
 	delta2 = delta3 * (Theta2(:, 2:end)) .* sigmoidGradient(z2(i, :));
 	%delta2 = delta2(2:end);		% matrix 1x25
@@ -123,12 +123,12 @@ Theta2_grad = 1/m * delta2_sum;
 %}
 
 
-%compute gradient method2
+%compute gradient with vectorization method:
 delta3 = a3 - y_matrix;			% matrix 5000x10
 delta2 = delta3 * Theta2(:, 2:end) .*sigmoidGradient(z2);		% matrix 5000x25
 
-delta1_sum = (delta2)' * a1;	%result: matrix 25x401
-delta2_sum = (delta3)' * a2;	%result: matrix 10x26
+delta1_sum = (delta2)' * a1;	%result: matrix 25x401 = 25x5000 * 5000x401
+delta2_sum = (delta3)' * a2;	%result: matrix 10x26 = 10x5000 * 5000x26
 
 Theta1_grad = 1/m * delta1_sum;
 Theta2_grad = 1/m * delta2_sum;
@@ -139,8 +139,6 @@ Theta2_grad = 1/m * delta2_sum;
 % compute gradient Regularization
 Theta1_grad += lambda/m * [zeros(hidden_layer_size, 1) Theta1(:, 2:end)];
 Theta2_grad += lambda/m * [zeros(num_labels, 1) Theta2(:, 2:end)];
-
-
 
 % -------------------------------------------------------------
 
